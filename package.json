@@ -23,6 +23,7 @@
     "bluebird": "^3.5.0",
     "child-process-promise": "^2.2.1",
     "debug": "^2.6.8",
+    "joi": "^10.5.2",
     "md5": "^2.2.1"
   },
   "devDependencies": {
