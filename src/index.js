@@ -1,30 +1,35 @@
 import Promise from 'bluebird';
 import md5 from 'md5';
+import Joi from 'joi';
 
 import TCfilterParser from './TCfilterParser';
 import TCqdiscParser from './TCqdiscParser';
 import TCclassParser from './TCclassParser';
+import TCRuler from './TCRuler';
 import helpers from './helpers';
+import validators from './validators';
 
 
 const debug = require('debug')('tc-wrapper');
 
 class TCWrapper {
-  constructor(iface) {
-    this.iface = iface;
-    this.ifbDevice = `ifb${this._genIfbDeviceId()}`;
+  constructor(device) {
+    this.device = device;
+    this.deviceQdiscMajorId = this._genDeviceQdiscMajorId();
+    this.ifbDevice = `ifb${parseInt(this.deviceQdiscMajorId, 16)}`;
+    this.protocol = 'ip'; // IPv6 not suported yet, only IPv4
   }
 
-  _genIfbDeviceId() {
-    const baseDeviceHash = md5(this.iface).substring(0, 3);
+  _genDeviceQdiscMajorId() {
+    const baseDeviceHash = md5(this.device).substring(0, 3);
     const deviceHashPrefix = '1';
-
-    return parseInt(`${deviceHashPrefix}${baseDeviceHash}`, 16);
+    return `${deviceHashPrefix}${baseDeviceHash}`;
   }
 
   _genFilterKey(filterParam) { // eslint-disable-line class-methods-use-this
     const params = [];
     if (filterParam.network !== null) { params.push(`network=${filterParam.network}`); }
+    if (filterParam.srcPort !== null) { params.push(`srcPort=${filterParam.srcPort}`); }
     if (filterParam.dstPort !== null) { params.push(`dstPort=${filterParam.dstPort}`); }
     if (filterParam.protocol !== null) { params.push(`protocol=${filterParam.protocol}`); }
 
@@ -69,7 +74,7 @@ class TCWrapper {
 
           if (!shapingRule) { return; }
 
-          debug(`rule found: ${filterKey} -> ${shapingRule}`);
+          debug(`rule found: ${filterKey} -> ${JSON.stringify(shapingRule)}`);
           shapingRuleMapping[filterKey] = shapingRule;
         });
 
@@ -78,16 +83,16 @@ class TCWrapper {
   }
 
   del() {
-    debug(`About to delete rules of iface: ${this.iface}`);
+    debug(`About to delete rules of iface: ${this.device}`);
     const commands = [
       // Delete out qdisc
       {
-        cmd: `tc qdisc del dev ${this.iface} root`,
+        cmd: `tc qdisc del dev ${this.device} root`,
         allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
       },
       // Delete in qdisc
       {
-        cmd: `tc qdisc del dev ${this.iface} ingress`,
+        cmd: `tc qdisc del dev ${this.device} ingress`,
         allowedErrors: [
           new RegExp('RTNETLINK answers: Invalid argument', 'i'),
           new RegExp('RTNETLINK answers: No such file or directory', 'i')]
@@ -114,12 +119,93 @@ class TCWrapper {
   }
 
   get(ipv) {
-    debug(`About to fetch rules of ifaces: ${this.iface}, ${this.ifbDevice}`);
-    return Promise.all([this._getShapingRule(this.iface, ipv), this._getShapingRule(this.ifbDevice, ipv)])
+    debug(`About to fetch rules of ifaces: ${this.device}, ${this.ifbDevice}`);
+    return Promise.all([this._getShapingRule(this.device, ipv), this._getShapingRule(this.ifbDevice, ipv)])
       .then((results) => {
         const [outgoing, incoming] = results;
         return { outgoing, incoming };
       });
+  }
+
+  _enableIfbDevice() {
+    const commands = [
+      { cmd: 'modprobe ifb', allowedErrors: [] }, // Check if ifb module is present in Kernel
+      {
+        cmd: `ip link add ${this.ifbDevice} type ifb`,
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+      },
+      { cmd: `ip link set dev ${this.ifbDevice} up`, allowedErrors: [] },
+      {
+        cmd: `tc qdisc add dev ${this.device} ingress`,
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+      },
+      {
+        cmd: `tc filter add dev ${this.device} parent ffff: protocol ${this.protocol} u32 match u32 0 0 ` +
+        `flowid ${this.deviceQdiscMajorId}: action mirred egress redirect dev ${this.ifbDevice}`,
+        allowedErrors: []
+      },
+    ];
+
+    return Promise.mapSeries(commands, (command) => {
+      debug(`Running command ${command}...`);
+      return helpers.execCmd(command.cmd, command.allowedErrors)
+        .catch((err) => {
+          throw new Error(`Error executing cmd: ${command.cmd} with allowedErrors: ${command.allowedErrors}: ${err}`);
+        });
+    });
+  }
+
+  set(inputRules) {
+    const { error, value: rules } = Joi.validate(inputRules, validators.setRules);
+    if (error) {
+      throw new Error(`Rules validation error: ${error.message}`);
+    }
+
+    const actions = [];
+
+    if (rules.incoming && Object.keys(rules.incoming).length > 0) {
+      actions.push(this._enableIfbDevice());
+    }
+
+    // Store ids for multiple ruling
+    let qdiscMinorId;
+    let netemMajorId;
+
+    // Iterate over all outgoing rules and set them
+    actions.push(
+      Promise.mapSeries(Object.keys(rules.outgoing), (rule) => {
+        const direction = 'outgoing';
+        // Mandatory rule parameters.
+        const network = rule.match(/.*network=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}).*/)[1];
+        const protocol = rule.match(/.*protocol=(\w+).*/)[1];
+
+        // Optional rule parameters
+        let srcPort = null;
+        let dstPort = null;
+        try {
+          srcPort = rule.match(/.*srcPort=(\d+).*/)[1];
+        } catch (e) { /* ignored */ }
+        try {
+          dstPort = rule.match(/.*srcPort=(\d+).*/)[1];
+        } catch (e) { /* ignored */ }
+
+        // Rule options
+        const options = rules.outgoing[rule];
+
+        const tcRuler = new TCRuler(this.device, this.deviceQdiscMajorId, direction, network, protocol, dstPort,
+          srcPort, options, qdiscMinorId, netemMajorId);
+
+        return tcRuler.executeRules().then(() => {
+          qdiscMinorId = tcRuler.qdiscMinorId;
+          netemMajorId = tcRuler.netemMajorId;
+        });
+      })
+    );
+
+    // Iterate over all incoming rules and set them
+    // .---------
+
+    return Promise.mapSeries(actions, action => action);
   }
 }
 
