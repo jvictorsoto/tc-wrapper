@@ -28,7 +28,7 @@ var TCclassParser = function () {
     value: function parse() {
       var _this = this;
 
-      return _helpers2.default.execCmd('tc class show dev ' + this.device).then(function (stdout) {
+      return _helpers2.default.execCmd('tc class show dev ' + this.device, [new RegExp('Cannot find device', 'i')]).then(function (stdout) {
         var strippedOut = stdout.trim().match(/[^\r\n]+/g) || [];
 
         strippedOut.forEach(function (line) {
