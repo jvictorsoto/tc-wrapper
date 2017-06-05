@@ -333,7 +333,7 @@ describe('TCWrapper set Operation', () => {
           rate: '20Mbit'
         }
       },
-      outgoing: {}
+      // outgoing: {}
     };
 
     tc.set(rules)

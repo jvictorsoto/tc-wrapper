@@ -182,6 +182,9 @@ class TCWrapper {
       throw new Error(`Rules validation error: ${error.message}`);
     }
 
+    rules.outgoing = rules.outgoing || {};
+    rules.incoming = rules.incoming || {};
+
     const actions = [];
 
     // Store ids for multiple ruling
