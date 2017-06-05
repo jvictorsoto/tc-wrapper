@@ -24,7 +24,7 @@ class TCfilterParser {
   }
 
   parse() {
-    return helpers.execCmd(`tc filter show dev ${this.device}`)
+    return helpers.execCmd(`tc filter show dev ${this.device}`, [new RegExp('Cannot find device', 'i')])
       .then((stdout) => {
         const strippedOut = stdout.trim().match(/[^\r\n]+/g) || [];
 
