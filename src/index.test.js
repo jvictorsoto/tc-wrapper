@@ -277,6 +277,20 @@ describe('TCWrapper set Operation', () => {
 
   it('outgoing rate only on single network', (done) => {
     const tc = new TCWrapper('enp2s0');
+    // Allow rule deletion
+    execStub.withArgs('tc qdisc del dev enp2s0 root')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('tc qdisc del dev enp2s0 ingress')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+
+    // Optional: Will only execute if ifbDevice exists
+    execStub.withArgs('tc qdisc del dev ifb6711 root')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('ip link set dev ifb6711 down')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('ip link delete ifb6711 type ifb')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+
 
     execStub.withArgs('tc qdisc add dev enp2s0 root handle 1a37: htb default 1')
       .returns(BPromise.resolve({ stdout: '', stderr: '' }));
@@ -305,6 +319,20 @@ describe('TCWrapper set Operation', () => {
 
   it('incoming rate only on single network', (done) => {
     const tc = new TCWrapper('enp2s0');
+    // Allow rule deletion
+    execStub.withArgs('tc qdisc del dev enp2s0 root')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('tc qdisc del dev enp2s0 ingress')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+
+    // Optional: Will only execute if ifbDevice exists
+    execStub.withArgs('tc qdisc del dev ifb6711 root')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('ip link set dev ifb6711 down')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('ip link delete ifb6711 type ifb')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+
 
     // ifb enabled on Kernel
     execStub.withArgs('modprobe ifb').returns(BPromise.resolve({ stdout: '', stderr: '' }));

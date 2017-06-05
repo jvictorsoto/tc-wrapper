@@ -249,7 +249,7 @@ var TCWrapper = function () {
       rules.outgoing = rules.outgoing || {};
       rules.incoming = rules.incoming || {};
 
-      var actions = [];
+      var actions = [this.del()];
 
       // Store ids for multiple ruling
       var qdiscMinorId = void 0;

@@ -1,6 +1,6 @@
 {
   "name": "tc-wrapper",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NodeJS wrapper for tc command (traffic control on linux)",
   "author": "J. Victor Soto",
   "main": "./dist/index.js",

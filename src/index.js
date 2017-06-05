@@ -185,7 +185,7 @@ class TCWrapper {
     rules.outgoing = rules.outgoing || {};
     rules.incoming = rules.incoming || {};
 
-    const actions = [];
+    const actions = [this.del()];
 
     // Store ids for multiple ruling
     let qdiscMinorId;
