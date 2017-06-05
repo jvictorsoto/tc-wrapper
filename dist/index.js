@@ -249,44 +249,50 @@ var TCWrapper = function () {
       rules.outgoing = rules.outgoing || {};
       rules.incoming = rules.incoming || {};
 
-      var actions = [this.del()];
+      var actions = [this.del];
 
       // Store ids for multiple ruling
       var qdiscMinorId = void 0;
       var netemMajorId = void 0;
 
       // Iterate over all outgoing rules and set them
-      actions.push(_bluebird2.default.mapSeries(Object.keys(rules.outgoing), function (rule) {
-        var tcRuler = _this2._genTCRuler(_this2.device, 'outgoing', rule, rules.outgoing[rule], qdiscMinorId, netemMajorId);
+      actions.push(function () {
+        return _bluebird2.default.mapSeries(Object.keys(rules.outgoing), function (rule) {
+          var tcRuler = _this2._genTCRuler(_this2.device, 'outgoing', rule, rules.outgoing[rule], qdiscMinorId, netemMajorId);
 
-        return tcRuler.executeRules().then(function () {
-          qdiscMinorId = tcRuler.qdiscMinorId;
-          netemMajorId = tcRuler.netemMajorId;
+          return tcRuler.executeRules().then(function () {
+            qdiscMinorId = tcRuler.qdiscMinorId;
+            netemMajorId = tcRuler.netemMajorId;
+          });
         });
-      }));
+      });
 
       if (rules.incoming && Object.keys(rules.incoming).length > 0) {
-        actions.push(this._enableIfbDevice());
+        actions.push(this._enableIfbDevice);
         // Clean ids...
-        actions.push(new _bluebird2.default(function (resolve) {
-          qdiscMinorId = undefined;
-          netemMajorId = undefined;
-          resolve(null);
-        }));
+        actions.push(function () {
+          return new _bluebird2.default(function (resolve) {
+            qdiscMinorId = undefined;
+            netemMajorId = undefined;
+            resolve(null);
+          });
+        });
       }
 
       // Iterate over all incoming rules and set them
-      actions.push(_bluebird2.default.mapSeries(Object.keys(rules.incoming), function (rule) {
-        var tcRuler = _this2._genTCRuler(_this2.ifbDevice, 'incoming', rule, rules.incoming[rule], qdiscMinorId, netemMajorId);
+      actions.push(function () {
+        return _bluebird2.default.mapSeries(Object.keys(rules.incoming), function (rule) {
+          var tcRuler = _this2._genTCRuler(_this2.ifbDevice, 'incoming', rule, rules.incoming[rule], qdiscMinorId, netemMajorId);
 
-        return tcRuler.executeRules().then(function () {
-          qdiscMinorId = tcRuler.qdiscMinorId;
-          netemMajorId = tcRuler.netemMajorId;
+          return tcRuler.executeRules().then(function () {
+            qdiscMinorId = tcRuler.qdiscMinorId;
+            netemMajorId = tcRuler.netemMajorId;
+          });
         });
-      }));
+      });
 
       return _bluebird2.default.mapSeries(actions, function (action) {
-        return action;
+        return action.bind(_this2)();
       });
     }
   }]);

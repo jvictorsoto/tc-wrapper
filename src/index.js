@@ -185,7 +185,7 @@ class TCWrapper {
     rules.outgoing = rules.outgoing || {};
     rules.incoming = rules.incoming || {};
 
-    const actions = [this.del()];
+    const actions = [this.del];
 
     // Store ids for multiple ruling
     let qdiscMinorId;
@@ -193,7 +193,7 @@ class TCWrapper {
 
     // Iterate over all outgoing rules and set them
     actions.push(
-      Promise.mapSeries(Object.keys(rules.outgoing), (rule) => {
+      () => Promise.mapSeries(Object.keys(rules.outgoing), (rule) => {
         const tcRuler = this._genTCRuler(this.device, 'outgoing', rule,
           rules.outgoing[rule], qdiscMinorId, netemMajorId);
 
@@ -205,9 +205,9 @@ class TCWrapper {
     );
 
     if (rules.incoming && Object.keys(rules.incoming).length > 0) {
-      actions.push(this._enableIfbDevice());
+      actions.push(this._enableIfbDevice);
       // Clean ids...
-      actions.push(new Promise((resolve) => {
+      actions.push(() => new Promise((resolve) => {
         qdiscMinorId = undefined;
         netemMajorId = undefined;
         resolve(null);
@@ -216,7 +216,7 @@ class TCWrapper {
 
     // Iterate over all incoming rules and set them
     actions.push(
-      Promise.mapSeries(Object.keys(rules.incoming), (rule) => {
+      () => Promise.mapSeries(Object.keys(rules.incoming), (rule) => {
         const tcRuler = this._genTCRuler(this.ifbDevice, 'incoming', rule,
           rules.incoming[rule], qdiscMinorId, netemMajorId);
 
@@ -227,7 +227,7 @@ class TCWrapper {
       })
     );
 
-    return Promise.mapSeries(actions, action => action);
+    return Promise.mapSeries(actions, action => action.bind(this)());
   }
 }
 
