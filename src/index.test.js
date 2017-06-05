@@ -112,7 +112,7 @@ describe('TCWrapper get Operation', () => {
         expect(result).to.deep.equal({
           outgoing: {
             'network=0.0.0.0/0,protocol=ip': {
-              rate: '10M'
+              rate: '10Mbit'
             }
           },
           incoming: {}
@@ -174,12 +174,12 @@ describe('TCWrapper get Operation', () => {
         expect(result).to.deep.equal({
           outgoing: {
             'network=0.0.0.0/0,protocol=ip': {
-              rate: '10M'
+              rate: '10Mbit'
             }
           },
           incoming: {
             'network=0.0.0.0/0,protocol=ip': {
-              rate: '30M'
+              rate: '30Mbit'
             }
           }
         });
@@ -239,20 +239,20 @@ describe('TCWrapper get Operation', () => {
         expect(result).to.deep.equal({
           outgoing: {
             'network=0.0.0.0/0,protocol=ip': {
-              delay: '1.0',
-              jitter: '0.5',
-              loss: '3',
-              corrupt: '2',
-              rate: '10M'
+              delay: '1.0ms',
+              jitter: '0.5ms',
+              loss: '3%',
+              corrupt: '2%',
+              rate: '10Mbit'
             }
           },
           incoming: {
             'network=0.0.0.0/0,protocol=ip': {
-              delay: '5.0',
-              jitter: '2.5',
-              loss: '9',
-              corrupt: '7',
-              rate: '34M'
+              delay: '5.0ms',
+              jitter: '2.5ms',
+              loss: '9%',
+              corrupt: '7%',
+              rate: '34Mbit'
             }
           }
         });

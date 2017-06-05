@@ -40,12 +40,10 @@ var TCqdiscParser = function () {
             _this._parseNetemParam(line, 'parent', '\\w+\\:\\w+');
           }
 
-          _this._parseNetemParam(line, 'delay', '\\d+\\.\\d+');
+          _this._parseNetemParam(line, 'delay', '\\d+\\.\\d+\\w+');
           _this._parseNetemDelayAndJitter(line);
-          _this._parseNetemParam(line, 'loss', '[\\d\\.]+');
-          _this._parseNetemParam(line, 'duplicate', '\\d+');
-          _this._parseNetemParam(line, 'corrupt', '[\\d\\.]+');
-          _this._parseNetemParam(line, 'reorder', '\\d+');
+          _this._parseNetemParam(line, 'loss', '[\\d\\.]+\\%');
+          _this._parseNetemParam(line, 'corrupt', '[\\d\\.]+\\%');
           _this._parseTbfRate(line); // TODO: Check that this works fine, I only support htb rate not tbf...
 
           _this.parsedParams.push(_this.parsedParam);
@@ -64,7 +62,7 @@ var TCqdiscParser = function () {
     key: '_parseNetemDelayAndJitter',
     value: function _parseNetemDelayAndJitter(line) {
       // Line looks like: qdisc netem 1aba: parent 1a37:5 limit 1000 delay 20.0ms  1.5ms loss 11%
-      var regex = new RegExp('.*(delay)\\s+(\\d+\\.\\d+)ms\\s+(\\d+\\.\\d+)m.*');
+      var regex = new RegExp('.*(delay)\\s+(\\d+\\.\\d+\\w+)\\s+(\\d+\\.\\d+\\w+).*');
       var parsedLine = line.match(regex);
       if (parsedLine === null) {
         return;
@@ -89,7 +87,7 @@ var TCqdiscParser = function () {
     key: '_parseTbfRate',
     value: function _parseTbfRate(line) {
       // Line looks like:  qdisc tbf 20: parent 1a41:1 rate 20Mbit burst 20000b limit 10000b
-      var regex = new RegExp('.*(rate)\\s+(\\d+\\w).*');
+      var regex = new RegExp('.*(rate)\\s+(\\d+\\w+).*');
       var parsedLine = line.match(regex);
       if (parsedLine === null) {
         return;

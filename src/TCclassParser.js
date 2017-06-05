@@ -43,7 +43,7 @@ class TCclassParser {
 
   _parseHtbRate(line) {
     // Line looks like: class htb 1a37:2 root leaf 1ab7: prio 0 rate 20Mbit ceil 20Mbit burst 250Kb cburst 250Kb
-    const regex = new RegExp('.*(rate)\\s+(\\d+\\w).*');
+    const regex = new RegExp('.*(rate)\\s+(\\d+\\w+).*');
     const parsedLine = line.match(regex);
     if (parsedLine === null) { return; } // Not our line...
 

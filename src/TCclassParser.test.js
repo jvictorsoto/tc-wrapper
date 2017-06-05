@@ -42,7 +42,7 @@ describe('TCclassParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             classid: '1a37:1',
-            rate: '1G'
+            rate: '1Gbit'
           }
         ]);
         done(null);
@@ -63,11 +63,11 @@ describe('TCclassParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             classid: '1a37:1',
-            rate: '1G'
+            rate: '1Gbit'
           },
           {
             classid: '1a37:2',
-            rate: '10M'
+            rate: '10Mbit'
           }
         ]);
         done(null);
@@ -75,5 +75,3 @@ describe('TCclassParser sunny cases', () => {
       .catch(err => done(err));
   });
 });
-
-// TODO: More tests, try to generate tc output here instead of copying examples.

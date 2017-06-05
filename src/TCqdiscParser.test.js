@@ -87,7 +87,7 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            loss: '10'
+            loss: '10%'
           }
         ]);
         done(null);
@@ -108,7 +108,7 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            loss: '10.9'
+            loss: '10.9%'
           }
         ]);
         done(null);
@@ -130,11 +130,11 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            loss: '10'
+            loss: '10%'
           },
           {
             parent: '1a37:3',
-            loss: '5'
+            loss: '5%'
           }
         ]);
         done(null);
@@ -155,7 +155,7 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            delay: '10.0'
+            delay: '10.0ms'
           }
         ]);
         done(null);
@@ -177,11 +177,11 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            delay: '10.0'
+            delay: '10.0ms'
           },
           {
             parent: '1a37:3',
-            delay: '5.0'
+            delay: '5.0ms'
           }
         ]);
         done(null);
@@ -202,8 +202,8 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            delay: '10.0',
-            jitter: '2.0'
+            delay: '10.0ms',
+            jitter: '2.0ms'
           }
         ]);
         done(null);
@@ -225,13 +225,13 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            delay: '10.0',
-            jitter: '2.0'
+            delay: '10.0ms',
+            jitter: '2.0ms'
           },
           {
             parent: '1a37:3',
-            delay: '5.0',
-            jitter: '1.0'
+            delay: '5.0ms',
+            jitter: '1.0ms'
           }
         ]);
         done(null);
@@ -252,7 +252,7 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            corrupt: '1'
+            corrupt: '1%'
           }
         ]);
         done(null);
@@ -273,7 +273,7 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            corrupt: '1.6'
+            corrupt: '1.6%'
           }
         ]);
         done(null);
@@ -295,11 +295,11 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            corrupt: '1'
+            corrupt: '1%'
           },
           {
             parent: '1a37:3',
-            corrupt: '5'
+            corrupt: '5%'
           }
         ]);
         done(null);
@@ -320,8 +320,8 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            loss: '1',
-            delay: '5.0'
+            loss: '1%',
+            delay: '5.0ms'
           }
         ]);
         done(null);
@@ -343,13 +343,13 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            loss: '1',
-            delay: '5.0'
+            loss: '1%',
+            delay: '5.0ms'
           },
           {
             parent: '1a37:3',
-            loss: '3',
-            delay: '20.0'
+            loss: '3%',
+            delay: '20.0ms'
           }
         ]);
         done(null);
@@ -370,10 +370,10 @@ describe('TCqdiscParser sunny cases', () => {
         expect(result).to.deep.equal([
           {
             parent: '1a37:2',
-            delay: '5.0',
-            jitter: '2.0',
-            loss: '1',
-            corrupt: '3'
+            delay: '5.0ms',
+            jitter: '2.0ms',
+            loss: '1%',
+            corrupt: '3%'
           }
         ]);
         done(null);
@@ -381,5 +381,3 @@ describe('TCqdiscParser sunny cases', () => {
       .catch(err => done(err));
   });
 });
-
-// TODO: More tests, try to generate tc output here instead of copying examples.

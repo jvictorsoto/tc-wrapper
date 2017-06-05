@@ -208,5 +208,3 @@ describe('TCfilterParser sunny cases', () => {
       .catch(err => done(err));
   });
 });
-
-// TODO: More tests, try to generate tc output here instead of copying examples.
