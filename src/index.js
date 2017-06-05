@@ -155,6 +155,27 @@ class TCWrapper {
     });
   }
 
+  _genTCRuler(device, direction, rule, rulePayload, qdiscMinorId, netemMajorId) {
+    // Mandatory rule parameters.
+    const network = rule.match(/.*network=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}).*/)[1];
+    const protocol = rule.match(/.*protocol=(\w+).*/)[1];
+
+    // Optional rule parameters
+    let srcPort = null;
+    let dstPort = null;
+    try {
+      srcPort = rule.match(/.*srcPort=(\d+).*/)[1];
+    } catch (e) { /* ignored */ }
+    try {
+      dstPort = rule.match(/.*srcPort=(\d+).*/)[1];
+    } catch (e) { /* ignored */ }
+
+    const tcRuler = new TCRuler(device, this.deviceQdiscMajorId, direction, network, protocol, dstPort,
+      srcPort, rulePayload, qdiscMinorId, netemMajorId);
+
+    return tcRuler;
+  }
+
   set(inputRules) {
     const { error, value: rules } = Joi.validate(inputRules, validators.setRules);
     if (error) {
@@ -163,10 +184,6 @@ class TCWrapper {
 
     const actions = [];
 
-    if (rules.incoming && Object.keys(rules.incoming).length > 0) {
-      actions.push(this._enableIfbDevice());
-    }
-
     // Store ids for multiple ruling
     let qdiscMinorId;
     let netemMajorId;
@@ -174,26 +191,8 @@ class TCWrapper {
     // Iterate over all outgoing rules and set them
     actions.push(
       Promise.mapSeries(Object.keys(rules.outgoing), (rule) => {
-        const direction = 'outgoing';
-        // Mandatory rule parameters.
-        const network = rule.match(/.*network=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}).*/)[1];
-        const protocol = rule.match(/.*protocol=(\w+).*/)[1];
-
-        // Optional rule parameters
-        let srcPort = null;
-        let dstPort = null;
-        try {
-          srcPort = rule.match(/.*srcPort=(\d+).*/)[1];
-        } catch (e) { /* ignored */ }
-        try {
-          dstPort = rule.match(/.*srcPort=(\d+).*/)[1];
-        } catch (e) { /* ignored */ }
-
-        // Rule options
-        const options = rules.outgoing[rule];
-
-        const tcRuler = new TCRuler(this.device, this.deviceQdiscMajorId, direction, network, protocol, dstPort,
-          srcPort, options, qdiscMinorId, netemMajorId);
+        const tcRuler = this._genTCRuler(this.device, 'outgoing', rule,
+          rules.outgoing[rule], qdiscMinorId, netemMajorId);
 
         return tcRuler.executeRules().then(() => {
           qdiscMinorId = tcRuler.qdiscMinorId;
@@ -202,8 +201,28 @@ class TCWrapper {
       })
     );
 
+    if (rules.incoming && Object.keys(rules.incoming).length > 0) {
+      actions.push(this._enableIfbDevice());
+      // Clean ids...
+      actions.push(new Promise((resolve) => {
+        qdiscMinorId = undefined;
+        netemMajorId = undefined;
+        resolve(null);
+      }));
+    }
+
     // Iterate over all incoming rules and set them
-    // .---------
+    actions.push(
+      Promise.mapSeries(Object.keys(rules.incoming), (rule) => {
+        const tcRuler = this._genTCRuler(this.ifbDevice, 'incoming', rule,
+          rules.incoming[rule], qdiscMinorId, netemMajorId);
+
+        return tcRuler.executeRules().then(() => {
+          qdiscMinorId = tcRuler.qdiscMinorId;
+          netemMajorId = tcRuler.netemMajorId;
+        });
+      })
+    );
 
     return Promise.mapSeries(actions, action => action);
   }

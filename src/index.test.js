@@ -5,7 +5,6 @@ import BPromise from 'bluebird';
 
 import TCWrapper from './index';
 
-/*
 describe('TCWrapper get Operation', () => {
   let execStub;
 
@@ -262,7 +261,7 @@ describe('TCWrapper get Operation', () => {
       .catch(err => done(err));
   });
 });
-*/
+
 
 describe('TCWrapper set Operation', () => {
   let execStub;
@@ -278,16 +277,6 @@ describe('TCWrapper set Operation', () => {
 
   it('outgoing rate only on single network', (done) => {
     const tc = new TCWrapper('enp2s0');
-    /*
-    // ifb enabled on Kernel
-    execStub.withArgs('modprobe ifb').returns(BPromise.resolve({ stdout: '', stderr: '' }));
-    // Allow creating ifb device & mirror ingress traffic to it.
-     execStub.withArgs('ip link add ifb6711 type ifb').returns(BPromise.resolve({ stdout: '', stderr: '' }));
-    execStub.withArgs('ip link set dev ifb6711 up').returns(BPromise.resolve({ stdout: '', stderr: '' }));
-    execStub.withArgs('tc qdisc add dev enp2s0 ingress').returns(BPromise.resolve({ stdout: '', stderr: '' }));
-    execStub.withArgs('tc filter add dev enp2s0 parent ffff: protocol ip u32 match u32 0 0 flowid 1a37: action mirred' +
-      ' egress redirect dev ifb6711').returns(BPromise.resolve({ stdout: '', stderr: '' }));
-    */
 
     execStub.withArgs('tc qdisc add dev enp2s0 root handle 1a37: htb default 1')
       .returns(BPromise.resolve({ stdout: '', stderr: '' }));
@@ -305,7 +294,46 @@ describe('TCWrapper set Operation', () => {
         'network=0.0.0.0/0,protocol=ip': {
           rate: '20Mbit'
         }
-      }
+      },
+      incoming: {}
+    };
+
+    tc.set(rules)
+      .then(() => done(null))
+      .catch(err => done(err));
+  });
+
+  it('incoming rate only on single network', (done) => {
+    const tc = new TCWrapper('enp2s0');
+
+    // ifb enabled on Kernel
+    execStub.withArgs('modprobe ifb').returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    // Allow creating ifb device & mirror ingress traffic to it.
+    execStub.withArgs('ip link add ifb6711 type ifb').returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('ip link set dev ifb6711 up').returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('tc qdisc add dev enp2s0 ingress').returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('tc filter add dev enp2s0 parent ffff: protocol ip u32 match u32 0 0 flowid 1a37: action mirred' +
+      ' egress redirect dev ifb6711').returns(BPromise.resolve({ stdout: '', stderr: '' }));
+
+
+    execStub.withArgs('tc qdisc add dev ifb6711 root handle 1a37: htb default 1')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('tc class add dev ifb6711 parent 1a37: classid 1a37:1 htb rate 32Gbit')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('tc class add dev ifb6711 parent 1a37: classid 1a37:2 htb rate 20Mbit ceil 20Mbit burst ' +
+      '0.25Mbit cburst 0.25Mbit').returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('tc qdisc add dev ifb6711 parent 1a37:2 handle 1ab7: netem')
+      .returns(BPromise.resolve({ stdout: '', stderr: '' }));
+    execStub.withArgs('tc filter add dev ifb6711 protocol ip parent 1a37: prio 1 u32 match ip src 0.0.0.0/0 flowid ' +
+      '1a37:2').returns(BPromise.resolve({ stdout: '', stderr: '' }));
+
+    const rules = {
+      incoming: {
+        'network=0.0.0.0/0,protocol=ip': {
+          rate: '20Mbit'
+        }
+      },
+      outgoing: {}
     };
 
     tc.set(rules)
