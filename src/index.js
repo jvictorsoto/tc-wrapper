@@ -103,9 +103,18 @@ class TCWrapper {
     if (helpers.checkNetworkIface(this.ifbDevice)) {
       debug(`ifbDevice ${this.ifbDevice} present, deleting it too...`);
       [
-        { cmd: `tc qdisc del dev ${this.ifbDevice} root`, allowedErrors: [] },
-        { cmd: `ip link set dev ${this.ifbDevice} down`, allowedErrors: [] },
-        { cmd: `ip link delete ${this.ifbDevice} type ifb`, allowedErrors: [] },
+        {
+          cmd: `tc qdisc del dev ${this.ifbDevice} root`,
+          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
+        },
+        {
+          cmd: `ip link set dev ${this.ifbDevice} down`,
+          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
+        },
+        {
+          cmd: `ip link delete ${this.ifbDevice} type ifb`,
+          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
+        }
       ].forEach(c => commands.push(c));
     }
 

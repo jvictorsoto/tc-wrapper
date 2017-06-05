@@ -54,7 +54,7 @@ class TCRuler {
     // Max default rate of linux kernel is 32G, lets see if we can get the iface limit.
     const maxRate = '32Gbit';
     try {
-      const ifaceLimit = fs.readFileSync('/sys/class/net/enp2s0sd/speed', 'utf8');
+      const ifaceLimit = fs.readFileSync(`/sys/class/net/${this.device}/speed`, 'utf8');
       this.deviceMaxRate = `${ifaceLimit.match(/(\d+)/)[1]}Mbit`;
     } catch (e) { /* ignored */ }
 
