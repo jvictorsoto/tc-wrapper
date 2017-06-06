@@ -235,7 +235,7 @@ var TCWrapper = function () {
         srcPort = rule.match(/.*srcPort=(\d+).*/)[1];
       } catch (e) {/* ignored */}
       try {
-        dstPort = rule.match(/.*srcPort=(\d+).*/)[1];
+        dstPort = rule.match(/.*dstPort=(\d+).*/)[1];
       } catch (e) {/* ignored */}
 
       var tcRuler = new _TCRuler2.default(device, this.deviceQdiscMajorId, direction, network, protocol, dstPort, srcPort, rulePayload, qdiscMinorId, netemMajorId);

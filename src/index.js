@@ -176,7 +176,7 @@ class TCWrapper {
       srcPort = rule.match(/.*srcPort=(\d+).*/)[1];
     } catch (e) { /* ignored */ }
     try {
-      dstPort = rule.match(/.*srcPort=(\d+).*/)[1];
+      dstPort = rule.match(/.*dstPort=(\d+).*/)[1];
     } catch (e) { /* ignored */ }
 
     const tcRuler = new TCRuler(device, this.deviceQdiscMajorId, direction, network, protocol, dstPort,
