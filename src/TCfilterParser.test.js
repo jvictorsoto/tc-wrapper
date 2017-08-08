@@ -46,7 +46,8 @@ describe('TCfilterParser sunny cases', () => {
         expect(result).to.deep.equal(
           [{
             flowid: '1a37:2',
-            network: '0.0.0.0/0',
+            dstNetwork: '0.0.0.0/0',
+            srcNetwork: null,
             srcPort: null,
             dstPort: null,
             protocol: 'ip'
@@ -73,7 +74,8 @@ describe('TCfilterParser sunny cases', () => {
         expect(result).to.deep.equal(
           [{
             flowid: '1a37:2',
-            network: '0.0.0.0/0',
+            dstNetwork: '0.0.0.0/0',
+            srcNetwork: null,
             srcPort: null,
             dstPort: 80,
             protocol: 'ip'
@@ -99,7 +101,8 @@ describe('TCfilterParser sunny cases', () => {
         expect(result).to.deep.equal(
           [{
             flowid: '1a37:2',
-            network: '192.168.1.1/32',
+            dstNetwork: '192.168.1.1/32',
+            srcNetwork: null,
             srcPort: null,
             dstPort: null,
             protocol: 'ip'
@@ -126,7 +129,8 @@ describe('TCfilterParser sunny cases', () => {
         expect(result).to.deep.equal(
           [{
             flowid: '1a37:2',
-            network: '192.168.1.1/32',
+            dstNetwork: '192.168.1.1/32',
+            srcNetwork: null,
             srcPort: null,
             dstPort: 80,
             protocol: 'ip'
@@ -154,14 +158,16 @@ describe('TCfilterParser sunny cases', () => {
         expect(result).to.deep.equal(
           [{
             flowid: '1a37:2',
-            network: '192.168.1.1/32',
+            dstNetwork: '192.168.1.1/32',
+            srcNetwork: null,
             srcPort: null,
             dstPort: null,
             protocol: 'ip'
           },
           {
             flowid: '1a37:3',
-            network: '10.10.10.0/28',
+            dstNetwork: '10.10.10.0/28',
+            srcNetwork: null,
             srcPort: null,
             dstPort: null,
             protocol: 'ip'
@@ -191,14 +197,16 @@ describe('TCfilterParser sunny cases', () => {
         expect(result).to.deep.equal(
           [{
             flowid: '1a37:2',
-            network: '192.168.1.1/32',
+            dstNetwork: '192.168.1.1/32',
+            srcNetwork: null,
             srcPort: null,
             dstPort: 90,
             protocol: 'ip'
           },
           {
             flowid: '1a37:3',
-            network: '10.10.10.0/28',
+            dstNetwork: '10.10.10.0/28',
+            srcNetwork: null,
             srcPort: null,
             dstPort: 2020,
             protocol: 'ip'

@@ -1,7 +1,8 @@
 import Joi from 'joi';
 
 // Only ipv4 supported right now. TODO: Support v6
-const ipv4RulePattern = /network=(\d{1,3}\.){3}\d{1,3}\/\d{1,2}(,srcPort=\d+)?(,dstPort=\d+)?,protocol=ip/;
+const ipv4RulePattern =
+  /^((dst|src)Network=(\d{1,3}\.){3}\d{1,3}\/\d{1,2},){1,2}(srcPort=\d+,)?(dstPort=\d+,)?protocol=ip$/;
 
 // TODO: Improve validation!
 export default {

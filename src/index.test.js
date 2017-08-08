@@ -111,7 +111,7 @@ describe('TCWrapper get Operation', () => {
       .then((result) => {
         expect(result).to.deep.equal({
           outgoing: {
-            'network=0.0.0.0/0,protocol=ip': {
+            'dstNetwork=0.0.0.0/0,protocol=ip': {
               rate: '10Mbit'
             }
           },
@@ -173,12 +173,12 @@ describe('TCWrapper get Operation', () => {
       .then((result) => {
         expect(result).to.deep.equal({
           outgoing: {
-            'network=0.0.0.0/0,protocol=ip': {
+            'dstNetwork=0.0.0.0/0,protocol=ip': {
               rate: '10Mbit'
             }
           },
           incoming: {
-            'network=0.0.0.0/0,protocol=ip': {
+            'srcNetwork=0.0.0.0/0,protocol=ip': {
               rate: '30Mbit'
             }
           }
@@ -238,7 +238,7 @@ describe('TCWrapper get Operation', () => {
       .then((result) => {
         expect(result).to.deep.equal({
           outgoing: {
-            'network=0.0.0.0/0,protocol=ip': {
+            'dstNetwork=0.0.0.0/0,protocol=ip': {
               delay: '1.0ms',
               jitter: '0.5ms',
               loss: '3%',
@@ -247,7 +247,7 @@ describe('TCWrapper get Operation', () => {
             }
           },
           incoming: {
-            'network=0.0.0.0/0,protocol=ip': {
+            'srcNetwork=0.0.0.0/0,protocol=ip': {
               delay: '5.0ms',
               jitter: '2.5ms',
               loss: '9%',
@@ -305,7 +305,7 @@ describe('TCWrapper set Operation', () => {
 
     const rules = {
       outgoing: {
-        'network=0.0.0.0/0,protocol=ip': {
+        'dstNetwork=0.0.0.0/0,protocol=ip': {
           rate: '20Mbit'
         }
       },
@@ -357,7 +357,7 @@ describe('TCWrapper set Operation', () => {
 
     const rules = {
       incoming: {
-        'network=0.0.0.0/0,protocol=ip': {
+        'srcNetwork=0.0.0.0/0,protocol=ip': {
           rate: '20Mbit'
         }
       },

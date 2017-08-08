@@ -12,6 +12,10 @@ This module is installed via npm:
 npm install --save tc-wrapper
 ```
 
+## Changelog
+
+  * 1.0.8: Removed network parameter and included srcNetwork & dstNetwork paramenters
+
 ## Usage
 
 The library export a instantiable class that has three major methods: ```del```, ```get``` and ```set```, for deleting, fetching and setting tc rules.
@@ -41,7 +45,7 @@ tc.Wrapper.get().then((rules) => {
   /* rules looks like:
   {
     "outgoing": {
-      "network=0.0.0.0/0,protocol=ip": {
+      "srcNetwork=0.0.0.0/0,protocol=ip": {
         "delay": "1.0ms",
         "jitter": "0.5%",
         "loss": "3%",
@@ -50,10 +54,10 @@ tc.Wrapper.get().then((rules) => {
       }
     },
     "incoming": {
-      "network=192.168.1.1/32,protocol=ip": {
+      "dstNetwork=192.168.1.1/32,protocol=ip": {
         "loss": "9%",
       },
-      "network=10.10.10.0/28,srcPort=80,protocol=ip": {
+      "dstNetwork=192.168.1.1/32,srcNetwork=10.10.10.0/28,srcPort=80,protocol=ip": {
         "rate": "100Mbit",
       }
     }
@@ -71,7 +75,7 @@ const tcWrapper = new TCWrapper('eth0');
 
 const myRules = {
   outgoing: {
-    'network=0.0.0.0/0,protocol=ip':{
+    'dstNetwork=0.0.0.0/0,protocol=ip':{
       delay: '20ms'
     }
   }
@@ -92,7 +96,7 @@ const tcWrapper = new TCWrapper('eth0');
 
 const myRules = {
   incoming: {
-    'network=0.0.0.0/0,protocol=ip':{
+    'srcNetwork=0.0.0.0/0,protocol=ip':{
       rate: '20Mbit'
     }
   }

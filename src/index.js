@@ -28,7 +28,8 @@ class TCWrapper {
 
   _genFilterKey(filterParam) { // eslint-disable-line class-methods-use-this
     const params = [];
-    if (filterParam.network !== null) { params.push(`network=${filterParam.network}`); }
+    if (filterParam.srcNetwork !== null) { params.push(`srcNetwork=${filterParam.srcNetwork}`); }
+    if (filterParam.dstNetwork !== null) { params.push(`dstNetwork=${filterParam.dstNetwork}`); }
     if (filterParam.srcPort !== null) { params.push(`srcPort=${filterParam.srcPort}`); }
     if (filterParam.dstPort !== null) { params.push(`dstPort=${filterParam.dstPort}`); }
     if (filterParam.protocol !== null) { params.push(`protocol=${filterParam.protocol}`); }
@@ -166,7 +167,16 @@ class TCWrapper {
 
   _genTCRuler(device, direction, rule, rulePayload, qdiscMinorId, netemMajorId) {
     // Mandatory rule parameters.
-    const network = rule.match(/.*network=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}).*/)[1];
+    let srcNetwork = null;
+    let dstNetwork = null;
+    try {
+      srcNetwork = rule.match(/.*srcNetwork=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}).*/)[1];
+    } catch (e) { /* ignored */ }
+
+    try {
+      dstNetwork = rule.match(/.*dstNetwork=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}).*/)[1];
+    } catch (e) { /* ignored */ }
+
     const protocol = rule.match(/.*protocol=(\w+).*/)[1];
 
     // Optional rule parameters
@@ -179,7 +189,7 @@ class TCWrapper {
       dstPort = rule.match(/.*dstPort=(\d+).*/)[1];
     } catch (e) { /* ignored */ }
 
-    const tcRuler = new TCRuler(device, this.deviceQdiscMajorId, direction, network, protocol, dstPort,
+    const tcRuler = new TCRuler(device, this.deviceQdiscMajorId, direction, dstNetwork, srcNetwork, protocol, dstPort,
       srcPort, rulePayload, qdiscMinorId, netemMajorId);
 
     return tcRuler;

@@ -8,12 +8,13 @@ const DEFAULT_CLASS_MINOR_ID = 1;
 
 // Only supports htb shapping...
 class TCRuler {
-  constructor(device, deviceQdiscMajorId, direction, network, protocol, dstPort, srcPort, options,
+  constructor(device, deviceQdiscMajorId, direction, dstNetwork, srcNetwork, protocol, dstPort, srcPort, options,
     qdiscMinorId = DEFAULT_CLASS_MINOR_ID, netemMajorId) {
     this.device = device;
     this.deviceQdiscMajorId = deviceQdiscMajorId;
     this.direction = direction;
-    this.network = network;
+    this.dstNetwork = dstNetwork;
+    this.srcNetwork = srcNetwork;
     this.protocol = protocol;
     this.dstPort = dstPort;
     this.srcPort = srcPort;
@@ -117,10 +118,17 @@ class TCRuler {
 
   _genAddFilterCmd() {
     const cmd = {
-      cmd: `tc filter add dev ${this.device} protocol ip parent ${this.deviceQdiscMajorId}: prio 1 ` +
-      `u32 match ${this.protocol} ${(this.direction === 'outgoing') ? 'dst' : 'src'} ${this.network}`,
+      cmd: `tc filter add dev ${this.device} protocol ip parent ${this.deviceQdiscMajorId}: prio 1 u32`,
       allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
     };
+
+    if (this.srcNetwork !== null) {
+      cmd.cmd += ` match ${this.protocol} src ${this.srcNetwork}`;
+    }
+
+    if (this.dstNetwork !== null) {
+      cmd.cmd += ` match ${this.protocol} dst ${this.dstNetwork}`;
+    }
 
     if (this.srcPort !== null) {
       cmd.cmd += ` match ${this.protocol} sport ${this.srcPort} 0xffff`;

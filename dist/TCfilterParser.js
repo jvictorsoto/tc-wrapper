@@ -88,7 +88,8 @@ var TCfilterParser = function () {
     key: '_clear',
     value: function _clear() {
       this._flowId = null;
-      this._filterNetwork = null;
+      this._filterSrcNetwork = null;
+      this._filterDstNetwork = null;
       this._filterSrcPort = null;
       this._filterDstPort = null;
     }
@@ -97,7 +98,8 @@ var TCfilterParser = function () {
     value: function _getFilter() {
       return {
         flowid: this._flowId,
-        network: this._filterNetwork,
+        srcNetwork: this._filterSrcNetwork,
+        dstNetwork: this._filterDstNetwork,
         srcPort: this._filterSrcPort,
         dstPort: this._filterDstPort,
         protocol: this._protocol
@@ -161,7 +163,12 @@ var TCfilterParser = function () {
           return parseInt(set, 16);
         }).join('.');
         var netmask = ((parseInt(maskHex, 16) >>> 0).toString(2).match(/1/g) || []).length; // eslint-disable-line no-bitwise
-        this._filterNetwork = ip + '/' + netmask;
+
+        if (FilterMatchIdIpv4.INCOMING_NETWORK === matchId) {
+          this._filterSrcNetwork = ip + '/' + netmask;
+        } else {
+          this._filterDstNetwork = ip + '/' + netmask;
+        }
       } else if (matchId === FilterMatchIdIpv4.PORT) {
         // Ports are eight hex digits, upper-half represents src port and the bottom-half represents dst port
         this._filterSrcPort = parseInt(valueHex.substring(0, 4), 16) || null;

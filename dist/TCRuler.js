@@ -29,16 +29,17 @@ var DEFAULT_CLASS_MINOR_ID = 1;
 // Only supports htb shapping...
 
 var TCRuler = function () {
-  function TCRuler(device, deviceQdiscMajorId, direction, network, protocol, dstPort, srcPort, options) {
-    var qdiscMinorId = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : DEFAULT_CLASS_MINOR_ID;
-    var netemMajorId = arguments[9];
+  function TCRuler(device, deviceQdiscMajorId, direction, dstNetwork, srcNetwork, protocol, dstPort, srcPort, options) {
+    var qdiscMinorId = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : DEFAULT_CLASS_MINOR_ID;
+    var netemMajorId = arguments[10];
 
     _classCallCheck(this, TCRuler);
 
     this.device = device;
     this.deviceQdiscMajorId = deviceQdiscMajorId;
     this.direction = direction;
-    this.network = network;
+    this.dstNetwork = dstNetwork;
+    this.srcNetwork = srcNetwork;
     this.protocol = protocol;
     this.dstPort = dstPort;
     this.srcPort = srcPort;
@@ -148,9 +149,17 @@ var TCRuler = function () {
     key: '_genAddFilterCmd',
     value: function _genAddFilterCmd() {
       var cmd = {
-        cmd: 'tc filter add dev ' + this.device + ' protocol ip parent ' + this.deviceQdiscMajorId + ': prio 1 ' + ('u32 match ' + this.protocol + ' ' + (this.direction === 'outgoing' ? 'dst' : 'src') + ' ' + this.network),
+        cmd: 'tc filter add dev ' + this.device + ' protocol ip parent ' + this.deviceQdiscMajorId + ': prio 1 u32',
         allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
       };
+
+      if (this.srcNetwork !== null) {
+        cmd.cmd += ' match ' + this.protocol + ' src ' + this.srcNetwork;
+      }
+
+      if (this.dstNetwork !== null) {
+        cmd.cmd += ' match ' + this.protocol + ' dst ' + this.dstNetwork;
+      }
 
       if (this.srcPort !== null) {
         cmd.cmd += ' match ' + this.protocol + ' sport ' + this.srcPort + ' 0xffff';
