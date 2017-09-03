@@ -2,17 +2,16 @@ import Promise from 'bluebird';
 import fs from 'fs';
 import helpers from './helpers';
 
-const debug = require('debug')('tc-wrapper:TCRuler');
+const debug = require('debug')('tc-wrapper:TCRulerOutgoing');
 
 const DEFAULT_CLASS_MINOR_ID = 1;
 
 // Only supports htb shapping...
-class TCRuler {
-  constructor(device, deviceQdiscMajorId, direction, dstNetwork, srcNetwork, protocol, dstPort, srcPort, options,
+class TCRulerOutgoing {
+  constructor(device, deviceQdiscMajorId, dstNetwork, srcNetwork, protocol, dstPort, srcPort, options,
     qdiscMinorId = DEFAULT_CLASS_MINOR_ID, netemMajorId) {
     this.device = device;
     this.deviceQdiscMajorId = deviceQdiscMajorId;
-    this.direction = direction;
     this.dstNetwork = dstNetwork;
     this.srcNetwork = srcNetwork;
     this.protocol = protocol;
@@ -57,6 +56,7 @@ class TCRuler {
     try {
       const ifaceLimit = fs.readFileSync(`/sys/class/net/${this.device}/speed`, 'utf8');
       this.deviceMaxRate = `${ifaceLimit.match(/(\d+)/)[1]}Mbit`;
+      return;
     } catch (e) { /* ignored */ }
 
     this.deviceMaxRate = maxRate;
@@ -157,4 +157,4 @@ class TCRuler {
   }
 }
 
-export default TCRuler;
+export default TCRulerOutgoing;

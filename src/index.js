@@ -5,10 +5,10 @@ import Joi from 'joi';
 import TCfilterParser from './TCfilterParser';
 import TCqdiscParser from './TCqdiscParser';
 import TCclassParser from './TCclassParser';
-import TCRuler from './TCRuler';
+import TCRulerOutgoing from './TCRulerOutgoing';
+import TCRulerIncoming from './TCRulerIncoming';
 import helpers from './helpers';
 import validators from './validators';
-
 
 const debug = require('debug')('tc-wrapper');
 
@@ -43,44 +43,44 @@ class TCWrapper {
     const tcClassParser = new TCclassParser(target, ipv);
 
     return Promise.all([tcFilterParser.parse(), tcQdiscParser.parse(), tcClassParser.parse()])
-      .then((results) => {
-        const [filterParams, qdiscParams, classParams] = results;
-        const shapingRuleMapping = {};
+    .then((results) => {
+      const [filterParams, qdiscParams, classParams] = results;
+      const shapingRuleMapping = {};
 
-        filterParams.forEach((filterParam) => {
-          const shapingRule = {};
+      filterParams.forEach((filterParam) => {
+        const shapingRule = {};
 
-          const filterKey = this._genFilterKey(filterParam);
-          if (filterKey.length === 0) {
-            return;
-          }
+        const filterKey = this._genFilterKey(filterParam);
+        if (filterKey.length === 0) {
+          return;
+        }
 
-          qdiscParams.forEach((qdiscParam) => {
-            if (qdiscParam.parent !== filterParam.flowid) { return; } // Not our qdisc
+        qdiscParams.forEach((qdiscParam) => {
+          if (qdiscParam.parent !== filterParam.flowid) { return; } // Not our qdisc
 
-            // Clone qdisc and remove parent key as we match it in the result
-            const qdiscParamClone = Object.assign({}, qdiscParam);
-            delete qdiscParamClone.parent;
-            Object.assign(shapingRule, qdiscParamClone);
-          });
-
-          classParams.forEach((classParam) => {
-            if (classParam.classid !== filterParam.flowid) { return; } // Not our class
-
-            // Clone class and remove classid key as we match it in the result
-            const classParamClone = Object.assign({}, classParam);
-            delete classParamClone.classid;
-            Object.assign(shapingRule, classParamClone);
-          });
-
-          if (!shapingRule) { return; }
-
-          debug(`rule found: ${filterKey} -> ${JSON.stringify(shapingRule)}`);
-          shapingRuleMapping[filterKey] = shapingRule;
+          // Clone qdisc and remove parent key as we match it in the result
+          const qdiscParamClone = Object.assign({}, qdiscParam);
+          delete qdiscParamClone.parent;
+          Object.assign(shapingRule, qdiscParamClone);
         });
 
-        return shapingRuleMapping;
+        classParams.forEach((classParam) => {
+          if (classParam.classid !== filterParam.flowid) { return; } // Not our class
+
+          // Clone class and remove classid key as we match it in the result
+          const classParamClone = Object.assign({}, classParam);
+          delete classParamClone.classid;
+          Object.assign(shapingRule, classParamClone);
+        });
+
+        if (!shapingRule) { return; }
+
+        debug(`rule found: ${filterKey} -> ${JSON.stringify(shapingRule)}`);
+        shapingRuleMapping[filterKey] = shapingRule;
       });
+
+      return shapingRuleMapping;
+    });
   }
 
   del() {
@@ -97,13 +97,12 @@ class TCWrapper {
         allowedErrors: [
           new RegExp('RTNETLINK answers: Invalid argument', 'i'),
           new RegExp('RTNETLINK answers: No such file or directory', 'i')]
-      },
+      }
     ];
 
-    // If ifb device is up delete it too!
     if (helpers.checkNetworkIface(this.ifbDevice)) {
       debug(`ifbDevice ${this.ifbDevice} present, deleting it too...`);
-      [
+      commands.push(
         {
           cmd: `tc qdisc del dev ${this.ifbDevice} root`,
           allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
@@ -116,30 +115,30 @@ class TCWrapper {
           cmd: `ip link delete ${this.ifbDevice} type ifb`,
           allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
         }
-      ].forEach(c => commands.push(c));
+      );
     }
 
     return Promise.mapSeries(commands, (command) => {
-      debug(`Running command ${command}...`);
+      debug(`Running command ${command.cmd}...`);
       return helpers.execCmd(command.cmd, command.allowedErrors)
-        .catch((err) => {
-          throw new Error(`Error executing cmd: ${command.cmd} with allowedErrors: ${command.allowedErrors}: ${err}`);
-        });
+      .catch((err) => {
+        throw new Error(`Error executing cmd: ${command.cmd} with allowedErrors: ${command.allowedErrors}: ${err}`);
+      });
     });
   }
 
   get(ipv) {
-    debug(`About to fetch rules of ifaces: ${this.device}, ${this.ifbDevice}`);
-    return Promise.all([this._getShapingRule(this.device, ipv), this._getShapingRule(this.ifbDevice, ipv)])
-      .then((results) => {
-        const [outgoing, incoming] = results;
-        return { outgoing, incoming };
-      });
+    debug(`About to fetch rules of ifaces: ${this.device}`);
+    return Promise.all([this._getShapingRule(this.device, ipv)])
+    .then((results) => {
+      const [outgoing, incoming] = results;
+      return { outgoing, incoming };
+    });
   }
 
   _enableIfbDevice() {
     const commands = [
-      { cmd: 'modprobe ifb', allowedErrors: [] }, // Check if ifb module is present in Kernel
+      { cmd: 'modprobe ifb', allowedErrors: [/./] }, // try to activate ifb module in the kernel - ignore errors
       {
         cmd: `ip link add ${this.ifbDevice} type ifb`,
         allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
@@ -150,18 +149,22 @@ class TCWrapper {
         allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
       },
       {
+        cmd: `tc qdisc add dev ${this.ifbDevice} root handle ${this.deviceQdiscMajorId}: prio`,
+        allowedErrors: [/RTNETLINK answers: File exists/i]
+      },
+      {
         cmd: `tc filter add dev ${this.device} parent ffff: protocol ${this.protocol} u32 match u32 0 0 ` +
         `flowid ${this.deviceQdiscMajorId}: action mirred egress redirect dev ${this.ifbDevice}`,
         allowedErrors: []
-      },
+      }
     ];
 
     return Promise.mapSeries(commands, (command) => {
       debug(`Running command ${command}...`);
       return helpers.execCmd(command.cmd, command.allowedErrors)
-        .catch((err) => {
-          throw new Error(`Error executing cmd: ${command.cmd} with allowedErrors: ${command.allowedErrors}: ${err}`);
-        });
+      .catch((err) => {
+        throw new Error(`Error executing cmd: ${command.cmd} with allowedErrors: ${command.allowedErrors}: ${err}`);
+      });
     });
   }
 
@@ -189,10 +192,10 @@ class TCWrapper {
       dstPort = rule.match(/.*dstPort=(\d+).*/)[1];
     } catch (e) { /* ignored */ }
 
-    const tcRuler = new TCRuler(device, this.deviceQdiscMajorId, direction, dstNetwork, srcNetwork, protocol, dstPort,
-      srcPort, rulePayload, qdiscMinorId, netemMajorId);
+    const TCRuler = direction === 'incoming' ? TCRulerIncoming : TCRulerOutgoing;
 
-    return tcRuler;
+    return new TCRuler(device, this.deviceQdiscMajorId, dstNetwork, srcNetwork, protocol, dstPort,
+      srcPort, rulePayload, qdiscMinorId, netemMajorId);
   }
 
   set(inputRules) {
@@ -210,21 +213,24 @@ class TCWrapper {
     let qdiscMinorId;
     let netemMajorId;
 
-    // Iterate over all outgoing rules and set them
-    actions.push(
-      () => Promise.mapSeries(Object.keys(rules.outgoing), (rule) => {
-        const tcRuler = this._genTCRuler(this.device, 'outgoing', rule,
-          rules.outgoing[rule], qdiscMinorId, netemMajorId);
+    if (rules.outgoing && Object.keys(rules.outgoing).length > 0) {
+      // Iterate over all outgoing rules and set them
+      actions.push(
+        () => Promise.mapSeries(Object.keys(rules.outgoing), (rule) => {
+          const tcRuler = this._genTCRuler(this.device, 'outgoing', rule,
+            rules.outgoing[rule], qdiscMinorId, netemMajorId);
 
-        return tcRuler.executeRules().then(() => {
-          qdiscMinorId = tcRuler.qdiscMinorId;
-          netemMajorId = tcRuler.netemMajorId;
-        });
-      })
-    );
+          return tcRuler.executeRules().then(() => {
+            qdiscMinorId = tcRuler.qdiscMinorId;
+            netemMajorId = tcRuler.netemMajorId;
+          });
+        })
+      );
+    }
 
     if (rules.incoming && Object.keys(rules.incoming).length > 0) {
       actions.push(this._enableIfbDevice);
+
       // Clean ids...
       actions.push(() => new Promise((resolve) => {
         qdiscMinorId = undefined;
@@ -246,7 +252,7 @@ class TCWrapper {
       })
     );
 
-    return Promise.mapSeries(actions, action => action.bind(this)());
+    return Promise.mapSeries(actions, action => action.apply(this));
   }
 }
 

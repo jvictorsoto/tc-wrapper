@@ -41,7 +41,7 @@ import TCWrapper from 'tc-wrapper';
 
 const tcWrapper = new TCWrapper('eth0');
 
-tc.Wrapper.get().then((rules) => {
+tcWrapper.get().then((rules) => {
   /* rules looks like:
   {
     "outgoing": {
@@ -81,7 +81,7 @@ const myRules = {
   }
 };
 
-tc.Wrapper.set(myRules).then((rules) => {
+tcWrapper.set(myRules).then((rules) => {
   // Rules set!
 });
 
@@ -102,7 +102,7 @@ const myRules = {
   }
 };
 
-tc.Wrapper.set(myRules).then((rules) => {
+ttcWrapper.set(myRules).then((rules) => {
   // Rules set!
 });
 
