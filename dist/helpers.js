@@ -8,7 +8,7 @@ var _os = require('os');
 
 var _os2 = _interopRequireDefault(_os);
 
-var _childProcessPromise = require('child-process-promise');
+var _childProcessEs6Promise = require('child-process-es6-promise');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -24,7 +24,7 @@ function execCmd(cmd) {
   var allowedErrors = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
   debug('About to execute cmd: ' + cmd + ' with allowed errors: ' + JSON.stringify(allowedErrors));
-  return (0, _childProcessPromise.exec)(cmd).then(function (result) {
+  return (0, _childProcessEs6Promise.exec)(cmd).then(function (result) {
     debug('Executed successfully cmd: ' + cmd + ': ', result.stdout);
     var stdout = result.stdout;
 

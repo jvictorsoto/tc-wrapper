@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
-import childProcessPromise from 'child-process-promise';
+import childProcessPromise from 'child-process-es6-promise';
 import BPromise from 'bluebird';
 
 import TCclassParser from './TCclassParser';

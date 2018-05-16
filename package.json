@@ -1,6 +1,6 @@
 {
   "name": "tc-wrapper",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "NodeJS wrapper for tc command (traffic control on linux)",
   "author": "J. Victor Soto",
   "main": "./dist/index.js",
@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.0",
-    "child-process-promise": "^2.2.1",
+    "child-process-es6-promise": "^1.2.0",
     "debug": "^2.6.8",
     "joi": "^10.5.2",
     "md5": "^2.2.1"
