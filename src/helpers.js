@@ -11,7 +11,7 @@ function checkNetworkIface(iface) {
 // Helper function to exec commands.
 function execCmd(cmd, allowedErrors = []) {
   debug(`About to execute cmd: ${cmd} with allowed errors: ${JSON.stringify(allowedErrors)}`);
-  return exec(cmd)
+  return exec(cmd, {})
     .then((result) => {
       debug(`Executed successfully cmd: ${cmd}: `, result.stdout);
       const { stdout } = result;

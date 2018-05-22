@@ -24,7 +24,7 @@ function execCmd(cmd) {
   var allowedErrors = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
   debug('About to execute cmd: ' + cmd + ' with allowed errors: ' + JSON.stringify(allowedErrors));
-  return (0, _childProcessEs6Promise.exec)(cmd).then(function (result) {
+  return (0, _childProcessEs6Promise.exec)(cmd, {}).then(function (result) {
     debug('Executed successfully cmd: ' + cmd + ': ', result.stdout);
     var stdout = result.stdout;
 
