@@ -22,22 +22,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var debug = require('debug')('tc-wrapper:TCRuler');
+var debug = require('debug')('tc-wrapper:TCRulerOutgoing');
 
 var DEFAULT_CLASS_MINOR_ID = 1;
 
 // Only supports htb shapping...
 
-var TCRuler = function () {
-  function TCRuler(device, deviceQdiscMajorId, direction, dstNetwork, srcNetwork, protocol, dstPort, srcPort, options) {
-    var qdiscMinorId = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : DEFAULT_CLASS_MINOR_ID;
-    var netemMajorId = arguments[10];
+var TCRulerOutgoing = function () {
+  function TCRulerOutgoing(device, deviceQdiscMajorId, dstNetwork, srcNetwork, protocol, dstPort, srcPort, options) {
+    var qdiscMinorId = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : DEFAULT_CLASS_MINOR_ID;
+    var netemMajorId = arguments[9];
 
-    _classCallCheck(this, TCRuler);
+    _classCallCheck(this, TCRulerOutgoing);
 
     this.device = device;
     this.deviceQdiscMajorId = deviceQdiscMajorId;
-    this.direction = direction;
     this.dstNetwork = dstNetwork;
     this.srcNetwork = srcNetwork;
     this.protocol = protocol;
@@ -53,7 +52,7 @@ var TCRuler = function () {
     this._getMaxRate();
   }
 
-  _createClass(TCRuler, [{
+  _createClass(TCRulerOutgoing, [{
     key: '_genMakeQdiscCmd',
     value: function _genMakeQdiscCmd() {
       return {
@@ -88,6 +87,7 @@ var TCRuler = function () {
       try {
         var ifaceLimit = _fs2.default.readFileSync('/sys/class/net/' + this.device + '/speed', 'utf8');
         this.deviceMaxRate = ifaceLimit.match(/(\d+)/)[1] + 'Mbit';
+        return;
       } catch (e) {/* ignored */}
 
       this.deviceMaxRate = maxRate;
@@ -194,7 +194,7 @@ var TCRuler = function () {
     }
   }]);
 
-  return TCRuler;
+  return TCRulerOutgoing;
 }();
 
-exports.default = TCRuler;
+exports.default = TCRulerOutgoing;

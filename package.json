@@ -17,7 +17,8 @@
     "build": "babel ./src -d ./dist --ignore test.js",
     "pretest": "npm run build",
     "test": "mocha --ui bdd --reporter spec --colors --compilers js:babel-core/register ./src/**/*.test.js --recursive",
-    "test:single": "mocha --compilers js:babel-core/register"
+    "test:single": "mocha --compilers js:babel-core/register",
+    "test:e2e": "bash e2e/e2e.sh"
   },
   "dependencies": {
     "bluebird": "^3.5.0",
@@ -35,6 +36,7 @@
     "eslint-config-airbnb-base": "^11.2.0",
     "eslint-plugin-import": "^2.3.0",
     "mocha": "^3.1.2",
+    "myspeed": "^1.0.2",
     "sinon": "^2.3.2"
   },
   "files": [

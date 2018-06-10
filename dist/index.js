@@ -32,9 +32,13 @@ var _TCclassParser = require('./TCclassParser');
 
 var _TCclassParser2 = _interopRequireDefault(_TCclassParser);
 
-var _TCRuler = require('./TCRuler');
+var _TCRulerOutgoing = require('./TCRulerOutgoing');
 
-var _TCRuler2 = _interopRequireDefault(_TCRuler);
+var _TCRulerOutgoing2 = _interopRequireDefault(_TCRulerOutgoing);
+
+var _TCRulerIncoming = require('./TCRulerIncoming');
+
+var _TCRulerIncoming2 = _interopRequireDefault(_TCRulerIncoming);
 
 var _helpers = require('./helpers');
 
@@ -166,10 +170,9 @@ var TCWrapper = function () {
         allowedErrors: [new RegExp('RTNETLINK answers: Invalid argument', 'i'), new RegExp('RTNETLINK answers: No such file or directory', 'i')]
       }];
 
-      // If ifb device is up delete it too!
       if (_helpers2.default.checkNetworkIface(this.ifbDevice)) {
         debug('ifbDevice ' + this.ifbDevice + ' present, deleting it too...');
-        [{
+        commands.push({
           cmd: 'tc qdisc del dev ' + this.ifbDevice + ' root',
           allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
         }, {
@@ -178,13 +181,11 @@ var TCWrapper = function () {
         }, {
           cmd: 'ip link delete ' + this.ifbDevice + ' type ifb',
           allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
-        }].forEach(function (c) {
-          return commands.push(c);
         });
       }
 
       return _bluebird2.default.mapSeries(commands, function (command) {
-        debug('Running command ' + command + '...');
+        debug('Running command ' + command.cmd + '...');
         return _helpers2.default.execCmd(command.cmd, command.allowedErrors).catch(function (err) {
           throw new Error('Error executing cmd: ' + command.cmd + ' with allowedErrors: ' + command.allowedErrors + ': ' + err);
         });
@@ -193,8 +194,8 @@ var TCWrapper = function () {
   }, {
     key: 'get',
     value: function get(ipv) {
-      debug('About to fetch rules of ifaces: ' + this.device + ', ' + this.ifbDevice);
-      return _bluebird2.default.all([this._getShapingRule(this.device, ipv), this._getShapingRule(this.ifbDevice, ipv)]).then(function (results) {
+      debug('About to fetch rules of ifaces: ' + this.device);
+      return _bluebird2.default.all([this._getShapingRule(this.device, ipv)]).then(function (results) {
         var _results2 = _slicedToArray(results, 2),
             outgoing = _results2[0],
             incoming = _results2[1];
@@ -205,13 +206,16 @@ var TCWrapper = function () {
   }, {
     key: '_enableIfbDevice',
     value: function _enableIfbDevice() {
-      var commands = [{ cmd: 'modprobe ifb', allowedErrors: [] }, // Check if ifb module is present in Kernel
+      var commands = [{ cmd: 'modprobe ifb', allowedErrors: [/./] }, // try to activate ifb module in the kernel - ignore errors
       {
         cmd: 'ip link add ' + this.ifbDevice + ' type ifb',
         allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
       }, { cmd: 'ip link set dev ' + this.ifbDevice + ' up', allowedErrors: [] }, {
         cmd: 'tc qdisc add dev ' + this.device + ' ingress',
         allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+      }, {
+        cmd: 'tc qdisc add dev ' + this.ifbDevice + ' root handle ' + this.deviceQdiscMajorId + ': prio',
+        allowedErrors: [/RTNETLINK answers: File exists/i]
       }, {
         cmd: 'tc filter add dev ' + this.device + ' parent ffff: protocol ' + this.protocol + ' u32 match u32 0 0 ' + ('flowid ' + this.deviceQdiscMajorId + ': action mirred egress redirect dev ' + this.ifbDevice),
         allowedErrors: []
@@ -250,9 +254,9 @@ var TCWrapper = function () {
         dstPort = rule.match(/.*dstPort=(\d+).*/)[1];
       } catch (e) {/* ignored */}
 
-      var tcRuler = new _TCRuler2.default(device, this.deviceQdiscMajorId, direction, dstNetwork, srcNetwork, protocol, dstPort, srcPort, rulePayload, qdiscMinorId, netemMajorId);
+      var TCRuler = direction === 'incoming' ? _TCRulerIncoming2.default : _TCRulerOutgoing2.default;
 
-      return tcRuler;
+      return new TCRuler(device, this.deviceQdiscMajorId, dstNetwork, srcNetwork, protocol, dstPort, srcPort, rulePayload, qdiscMinorId, netemMajorId);
     }
   }, {
     key: 'set',
@@ -276,20 +280,23 @@ var TCWrapper = function () {
       var qdiscMinorId = void 0;
       var netemMajorId = void 0;
 
-      // Iterate over all outgoing rules and set them
-      actions.push(function () {
-        return _bluebird2.default.mapSeries(Object.keys(rules.outgoing), function (rule) {
-          var tcRuler = _this2._genTCRuler(_this2.device, 'outgoing', rule, rules.outgoing[rule], qdiscMinorId, netemMajorId);
+      if (rules.outgoing && Object.keys(rules.outgoing).length > 0) {
+        // Iterate over all outgoing rules and set them
+        actions.push(function () {
+          return _bluebird2.default.mapSeries(Object.keys(rules.outgoing), function (rule) {
+            var tcRuler = _this2._genTCRuler(_this2.device, 'outgoing', rule, rules.outgoing[rule], qdiscMinorId, netemMajorId);
 
-          return tcRuler.executeRules().then(function () {
-            qdiscMinorId = tcRuler.qdiscMinorId;
-            netemMajorId = tcRuler.netemMajorId;
+            return tcRuler.executeRules().then(function () {
+              qdiscMinorId = tcRuler.qdiscMinorId;
+              netemMajorId = tcRuler.netemMajorId;
+            });
           });
         });
-      });
+      }
 
       if (rules.incoming && Object.keys(rules.incoming).length > 0) {
         actions.push(this._enableIfbDevice);
+
         // Clean ids...
         actions.push(function () {
           return new _bluebird2.default(function (resolve) {
@@ -313,7 +320,7 @@ var TCWrapper = function () {
       });
 
       return _bluebird2.default.mapSeries(actions, function (action) {
-        return action.bind(_this2)();
+        return action.apply(_this2);
       });
     }
   }]);
