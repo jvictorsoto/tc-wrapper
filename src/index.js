@@ -114,11 +114,13 @@ class TCWrapper {
         },
         {
           cmd: `ip link set dev ${this.ifbDevice} down`,
-          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
+          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i'),
+            new RegExp('Cannot find device', 'i')]
         },
         {
           cmd: `ip link delete ${this.ifbDevice} type ifb`,
-          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
+          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i'),
+            new RegExp('Cannot find device', 'i')]
         }
       ].forEach(c => commands.push(c));
     }
@@ -146,12 +148,14 @@ class TCWrapper {
       { cmd: 'modprobe ifb', allowedErrors: [] }, // Check if ifb module is present in Kernel
       {
         cmd: `ip link add ${this.ifbDevice} type ifb`,
-        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i'),
+          new RegExp('Error: Exclusivity flag on, cannot modify.', 'i')]
       },
       { cmd: `ip link set dev ${this.ifbDevice} up`, allowedErrors: [] },
       {
         cmd: `tc qdisc add dev ${this.device} ingress`,
-        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i'),
+          new RegExp('Error: Exclusivity flag on, cannot modify.', 'i')]
       },
       {
         cmd: `tc filter add dev ${this.device} parent ffff: protocol ${this.protocol} u32 match u32 0 0 ` +

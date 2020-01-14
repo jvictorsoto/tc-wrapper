@@ -58,7 +58,7 @@ var TCRuler = function () {
     value: function _genMakeQdiscCmd() {
       return {
         cmd: 'tc qdisc add dev ' + this.device + ' root handle ' + this.deviceQdiscMajorId + ': htb ' + ('default ' + DEFAULT_CLASS_MINOR_ID),
-        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i'), new RegExp('Error: Exclusivity flag on, cannot modify.', 'i')]
       };
     }
   }, {
@@ -97,7 +97,7 @@ var TCRuler = function () {
     value: function _genDefaultClass() {
       return {
         cmd: 'tc class add dev ' + this.device + ' parent ' + this.deviceQdiscMajorId + ': classid ' + this.deviceQdiscMajorId + ':' + (DEFAULT_CLASS_MINOR_ID + ' htb rate ' + this.deviceMaxRate),
-        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i'), new RegExp('Error: Exclusivity flag on, cannot modify.', 'i')]
       };
     }
   }, {
@@ -106,7 +106,7 @@ var TCRuler = function () {
       var customRate = this.options.rate !== undefined;
       var cmd = {
         cmd: 'tc class add dev ' + this.device + ' parent ' + this.deviceQdiscMajorId + ': classid ' + this.deviceQdiscMajorId + ':' + (this._getQdiscMinorId() + ' htb rate ' + (customRate ? this.options.rate : this.deviceMaxRate) + ' ') + ('ceil ' + (customRate ? this.options.rate : this.deviceMaxRate)),
-        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i'), new RegExp('Error: Exclusivity flag on, cannot modify.', 'i')]
       };
 
       if (customRate) {
@@ -125,7 +125,7 @@ var TCRuler = function () {
     value: function _genSetNetemCmd() {
       var cmd = {
         cmd: 'tc qdisc add dev ' + this.device + ' parent ' + this.deviceQdiscMajorId + ':' + this.qdiscMinorId + ' ' + ('handle ' + this._getNetemMajorId() + ': netem'),
-        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i'), new RegExp('Error: Exclusivity flag on, cannot modify.', 'i')]
       };
 
       if (this.options.loss !== undefined) {
@@ -150,7 +150,7 @@ var TCRuler = function () {
     value: function _genAddFilterCmd() {
       var cmd = {
         cmd: 'tc filter add dev ' + this.device + ' protocol ip parent ' + this.deviceQdiscMajorId + ': prio 1 u32',
-        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: File exists', 'i'), new RegExp('Error: Exclusivity flag on, cannot modify.', 'i')]
       };
 
       if (this.srcNetwork !== null) {
