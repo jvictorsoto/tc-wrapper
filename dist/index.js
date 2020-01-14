@@ -158,12 +158,12 @@ var TCWrapper = function () {
       // Delete out qdisc
       {
         cmd: 'tc qdisc del dev ' + this.device + ' root',
-        allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i'), new RegExp('Error: Cannot delete qdisc with handle of zero.', 'i')]
       },
       // Delete in qdisc
       {
         cmd: 'tc qdisc del dev ' + this.device + ' ingress',
-        allowedErrors: [new RegExp('RTNETLINK answers: Invalid argument', 'i'), new RegExp('RTNETLINK answers: No such file or directory', 'i')]
+        allowedErrors: [new RegExp('RTNETLINK answers: Invalid argument', 'i'), new RegExp('RTNETLINK answers: No such file or directory', 'i'), new RegExp('Error: Invalid handle.', 'i'), new RegExp('Error: Cannot find specified qdisc on specified device.', 'i')]
       }];
 
       // If ifb device is up delete it too!
@@ -171,7 +171,7 @@ var TCWrapper = function () {
         debug('ifbDevice ' + this.ifbDevice + ' present, deleting it too...');
         [{
           cmd: 'tc qdisc del dev ' + this.ifbDevice + ' root',
-          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
+          allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i'), new RegExp('Error: Cannot delete qdisc with handle of zero.', 'i')]
         }, {
           cmd: 'ip link set dev ' + this.ifbDevice + ' down',
           allowedErrors: [new RegExp('RTNETLINK answers: No such file or directory', 'i')]
